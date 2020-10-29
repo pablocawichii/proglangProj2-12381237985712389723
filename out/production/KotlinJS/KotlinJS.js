@@ -149,12 +149,12 @@ if (typeof kotlin === 'undefined') {
     var tmp$;
     if (matches(tokens[0], 'STOP')) {
       window.close();
-    }modal.innerHTML = 'Program<br>';
+    }modal.innerHTML = 'Graph<br>';
     if (!matches(tokens[0], 'start')) {
       return generateError(0, "Program Does not Begin With 'start'", tokens);
     }if (!matches(tokens[tokens.length - 1 | 0], 'stop')) {
       return generateError(tokens.length - 1 | 0, "Program Does not End With 'stop'", tokens);
-    }modal.innerHTML = modal.innerHTML + 'Program -&gt; start &lt;plot_data&gt; stop<br>';
+    }modal.innerHTML = modal.innerHTML + 'Graph -&gt; start &lt;plot_data&gt; stop<br>';
     lineString = 'start &lt;plot_data&gt; stop<br>';
     var posIndex = 1;
     while (posIndex < tokens.length) {
@@ -259,7 +259,7 @@ if (typeof kotlin === 'undefined') {
     return true;
   }
   function generateLine(str) {
-    var outputStr = 'Program -> ' + str + ' <br>';
+    var outputStr = 'Graph -> ' + str + ' <br>';
     modal.innerHTML = modal.innerHTML + outputStr;
   }
   function generateError(errorPos, errorMessage, tokens) {

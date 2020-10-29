@@ -146,7 +146,7 @@ fun processInput(tokens: Array<String>) : Boolean {
         window.close()
     }
 
-    modal.innerHTML = "Program<br>"
+    modal.innerHTML = "Graph<br>"
 
     if(!tokens[0].matches("start")) {
         return generateError(0, "Program Does not Begin With 'start'", tokens)
@@ -156,7 +156,7 @@ fun processInput(tokens: Array<String>) : Boolean {
         return generateError(tokens.size-1, "Program Does not End With 'stop'", tokens)
     }
 
-    modal.innerHTML += "Program -&gt; start &lt;plot_data&gt; stop<br>"
+    modal.innerHTML += "Graph -&gt; start &lt;plot_data&gt; stop<br>"
 
     // Check Grammar and Provide Derivation
     lineString = "start &lt;plot_data&gt; stop<br>"
@@ -260,8 +260,6 @@ fun processInput(tokens: Array<String>) : Boolean {
                 if(!checkCoord(coord, posIndex, tokens)){
                     return false
                 }
-
-                // Process Axis
             }
 
             posIndex+= 3
@@ -317,7 +315,7 @@ fun checkY(char: Char) : Boolean {
 
 // Adds line to derivation output
 fun generateLine(str: String){
-    val outputStr = "Program -> $str <br>"
+    val outputStr = "Graph -> $str <br>"
 
     modal.innerHTML += outputStr
 }
@@ -356,7 +354,6 @@ abstract class CanvasItem() {
     val lineColor = "#FFF"
 
     abstract fun draw(state: CanvasState)
-
 }
 // Text Item, to hold strings, and point to previous. For Parse Tree
 class CanvasTextItem(val str: String, var x: Double, val y: Double, val parent: CanvasTextItem?) : CanvasItem() {
