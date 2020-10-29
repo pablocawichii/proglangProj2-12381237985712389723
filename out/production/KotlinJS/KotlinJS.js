@@ -468,7 +468,7 @@ if (typeof kotlin === 'undefined') {
     }
     var list = ArrayList_init_0(1);
     for (var index = 0; index < 1; index++) {
-      list.add_11rb$(new CanvasTextItem('Program', width / 2, y.v, null));
+      list.add_11rb$(new CanvasTextItem('Graph', width / 2, y.v, null));
     }
     var arrOfPlot = {v: list};
     y.v += 20;

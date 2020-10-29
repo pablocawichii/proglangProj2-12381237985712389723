@@ -537,7 +537,7 @@ fun generateVisuals(tokens: Array<String>) {
     }
 
     // List of Canvas Items for Parse Tree
-    var arrOfPlot = MutableList<CanvasTextItem>(1) { i -> CanvasTextItem("Program", width/2, y, null) }
+    var arrOfPlot = MutableList<CanvasTextItem>(1) { i -> CanvasTextItem("Graph", width/2, y, null) }
     // Position in terms of height
     y += 20
 
