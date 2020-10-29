@@ -6,7 +6,6 @@ if (typeof kotlin === 'undefined') {
   var Kind_CLASS = Kotlin.Kind.CLASS;
   var lastOrNull = Kotlin.kotlin.collections.lastOrNull_2p1efm$;
   var toChar = Kotlin.toChar;
-  var Unit = Kotlin.kotlin.Unit;
   var matches = Kotlin.kotlin.text.matches_rjktp$;
   var replace = Kotlin.kotlin.text.replace_680rmw$;
   var replaceFirst = Kotlin.kotlin.text.replaceFirst_680rmw$;
@@ -20,6 +19,7 @@ if (typeof kotlin === 'undefined') {
   var asReversed = Kotlin.kotlin.collections.asReversed_vvxzk3$;
   var ensureNotNull = Kotlin.ensureNotNull;
   var last = Kotlin.kotlin.collections.last_2p1efm$;
+  var Unit = Kotlin.kotlin.Unit;
   var ArrayList_init = Kotlin.kotlin.collections.ArrayList_init_287e2$;
   var copyToArray = Kotlin.kotlin.collections.copyToArray;
   var ArrayList_init_0 = Kotlin.kotlin.collections.ArrayList_init_ww73n8$;
@@ -61,13 +61,10 @@ if (typeof kotlin === 'undefined') {
     this.width = this.canvas.width;
     this.height = this.canvas.height;
     this.context = get_context();
-    this.changed = true;
-    this.interval = 33;
     this.xMax = 9;
     this.yMax = 9;
     this.graph = false;
     this.items = ArrayList_init();
-    window.setInterval(CanvasState_init$lambda(this), this.interval);
   }
   CanvasState.prototype.setAxis_vux9f0$ = function (x, y) {
     this.xMax = x;
@@ -75,31 +72,26 @@ if (typeof kotlin === 'undefined') {
   };
   CanvasState.prototype.addItem_cgrhq8$ = function (item) {
     this.items.add_11rb$(item);
-    this.changed = true;
   };
   CanvasState.prototype.addItems_10kp50$ = function (newItems) {
     var tmp$;
     tmp$ = newItems.iterator();
     while (tmp$.hasNext()) {
       var i = tmp$.next();
-      this.addItem_cgrhq8$(i);
+      this.items.add_11rb$(i);
     }
-    this.changed = true;
   };
   CanvasState.prototype.emptyItems = function () {
     while (lastOrNull(this.items) != null) {
       this.items.removeAt_za3lpa$(0);
     }
     this.clear();
-    this.changed = true;
   };
   CanvasState.prototype.isGraph = function () {
     this.graph = true;
-    this.changed = true;
   };
   CanvasState.prototype.notGraph = function () {
     this.graph = false;
-    this.changed = true;
   };
   CanvasState.prototype.drawGraph = function () {
     var tmp$, tmp$_0;
@@ -110,6 +102,12 @@ if (typeof kotlin === 'undefined') {
     this.context.fillRect(50.0, 50.0, 1.0, 450.0);
     this.context.fillStyle = '#000000';
     this.context.fillRect(500.0, 50.0, 1.0, 450.0);
+    tmp$ = this.yMax + 1 | 0;
+    for (var i = 0; i < tmp$; i++) {
+      this.context.strokeStyle = '#000000';
+      this.context.lineWidth = 1.0;
+      this.context.strokeText(i.toString(), 25.0, 500.0 - 450.0 / this.yMax * i);
+    }
     this.context.strokeStyle = '#000000';
     this.context.lineWidth = 1.0;
     this.context.strokeText('X-Axis', 515.0, 500.0);
@@ -117,21 +115,11 @@ if (typeof kotlin === 'undefined') {
     this.context.fillRect(50.0, 500.0, 450.0, 1.0);
     this.context.fillStyle = '#000000';
     this.context.fillRect(50.0, 50.0, 450.0, 1.0);
-    var k = 0;
-    tmp$ = this.yMax + 1 | 0;
-    for (var i = 0; i < tmp$; i++) {
-      this.context.strokeStyle = '#000000';
-      this.context.lineWidth = 1.0;
-      this.context.strokeText(i.toString(), 25.0, 500.0 - 450.0 / this.yMax * k);
-      k = k + 1 | 0;
-    }
-    k = 0;
     tmp$_0 = this.xMax + 1 | 0;
     for (var i_0 = 0; i_0 < tmp$_0; i_0++) {
       this.context.strokeStyle = '#000000';
       this.context.lineWidth = 1.0;
-      this.context.strokeText(String.fromCharCode(toChar(97 + i_0 | 0)), 70.0 + 410.0 / this.xMax * k, 550.0);
-      k = k + 1 | 0;
+      this.context.strokeText(String.fromCharCode(toChar(97 + i_0 | 0)), 70.0 + 410.0 / this.xMax * i_0, 550.0);
     }
   };
   CanvasState.prototype.clear = function () {
@@ -145,21 +133,12 @@ if (typeof kotlin === 'undefined') {
   };
   CanvasState.prototype.draw = function () {
     var tmp$;
-    if (!this.changed)
-      return;
-    this.changed = false;
     tmp$ = this.items.iterator();
     while (tmp$.hasNext()) {
       var item = tmp$.next();
       item.draw_v4m4ho$(this);
     }
   };
-  function CanvasState_init$lambda(this$CanvasState) {
-    return function () {
-      this$CanvasState.draw();
-      return Unit;
-    };
-  }
   CanvasState.$metadata$ = {
     kind: Kind_CLASS,
     simpleName: 'CanvasState',
@@ -348,9 +327,6 @@ if (typeof kotlin === 'undefined') {
     CanvasItem.call(this);
     this.coord1 = coord1;
     this.coord2 = coord2;
-    this.x = 0.0;
-    this.y = 0.0;
-    this.w = 0;
     this.x = toChar(this.coord1.charCodeAt(0) - 97) | 0;
     this.y = toDouble(String.fromCharCode(this.coord1.charCodeAt(1)));
     this.w = toInt(this.coord2);
@@ -397,8 +373,6 @@ if (typeof kotlin === 'undefined') {
   function CanvasFillItem(coord) {
     CanvasItem.call(this);
     this.coord = coord;
-    this.x = 0.0;
-    this.y = 0.0;
     this.x = toChar(this.coord.charCodeAt(0) - 97) | 0;
     this.y = toDouble(String.fromCharCode(this.coord.charCodeAt(1)));
   }
@@ -485,15 +459,12 @@ if (typeof kotlin === 'undefined') {
     simpleName: 'CanvasFillItem',
     interfaces: [CanvasItem]
   };
-  function parseTree(tokens) {
+  function generateVisuals(tokens) {
     var tmp$, tmp$_0, tmp$_1, tmp$_2, tmp$_3, tmp$_4;
     var width = canvasState.width;
     var y = {v: 40.0};
-    var semi = 0;
-    tmp$ = asReversed(parsedItems).iterator();
-    while (tmp$.hasNext()) {
-      var item = tmp$.next();
-      parsedItems.remove_11rb$(item);
+    while (!parsedItems.isEmpty()) {
+      parsedItems.removeAt_za3lpa$(0);
     }
     var list = ArrayList_init_0(1);
     for (var index = 0; index < 1; index++) {
@@ -505,28 +476,26 @@ if (typeof kotlin === 'undefined') {
     arrOfPlot.v.add_11rb$(new CanvasTextItem('<plot_data>', width / 2, y.v, arrOfPlot.v.get_za3lpa$(0)));
     arrOfPlot.v.add_11rb$(new CanvasTextItem('stop', width / 2 + 100, y.v, arrOfPlot.v.get_za3lpa$(0)));
     y.v += 20;
-    tmp$_0 = tokens.length - 1 | 0;
-    for (var i = 0; i < tmp$_0; i++) {
+    tmp$ = tokens.length - 1 | 0;
+    for (var i = 0; i < tmp$; i++) {
       if (matches(tokens[i], ';')) {
-        tmp$_1 = asReversed(arrOfPlot.v).iterator();
-        inner: while (tmp$_1.hasNext()) {
-          var k = tmp$_1.next();
+        tmp$_0 = asReversed(arrOfPlot.v).iterator();
+        inner: while (tmp$_0.hasNext()) {
+          var k = tmp$_0.next();
           if (matches(k.str, '<plot_data>')) {
             arrOfPlot.v.add_11rb$(new CanvasTextItem('<plot>', k.x - 100, y.v, k));
             arrOfPlot.v.add_11rb$(new CanvasTextItem(';', k.x, y.v, k));
             arrOfPlot.v.add_11rb$(new CanvasTextItem('<plot_data>', k.x + 100, y.v, k));
             y.v += 20;
-            semi = semi + 2 | 0;
             break inner;
           }}
       }}
-    tmp$_2 = asReversed(arrOfPlot.v).iterator();
-    while (tmp$_2.hasNext()) {
-      var k_0 = tmp$_2.next();
+    tmp$_1 = asReversed(arrOfPlot.v).iterator();
+    while (tmp$_1.hasNext()) {
+      var k_0 = tmp$_1.next();
       if (matches(k_0.str, '<plot_data>')) {
         arrOfPlot.v.add_11rb$(new CanvasTextItem('<plot>', k_0.x, y.v, k_0));
         y.v += 20;
-        semi = semi + 2 | 0;
         break;
       }}
     var list_0 = ArrayList_init_0(0);
@@ -534,16 +503,16 @@ if (typeof kotlin === 'undefined') {
       list_0.add_11rb$(arrOfPlot.v.get_za3lpa$(0));
     }
     var plotPos = list_0;
-    tmp$_3 = arrOfPlot.v.iterator();
-    while (tmp$_3.hasNext()) {
-      var item_0 = tmp$_3.next();
-      if (matches(item_0.str, '<plot>')) {
-        plotPos.add_11rb$(item_0);
+    tmp$_2 = arrOfPlot.v.iterator();
+    while (tmp$_2.hasNext()) {
+      var item = tmp$_2.next();
+      if (matches(item.str, '<plot>')) {
+        plotPos.add_11rb$(item);
       }}
     var posIndex = 1;
     var counter = 0;
     while (posIndex < (tokens.length - 1 | 0)) {
-      var plot = plotPos.get_za3lpa$(counter);
+      var plot = plotPos.get_za3lpa$((tmp$_3 = counter, counter = tmp$_3 + 1 | 0, tmp$_3));
       if (matches(tokens[posIndex], 'bar') || matches(tokens[posIndex], 'edge')) {
         var coord1 = tokens[posIndex + 1 | 0];
         var coord2 = tokens[posIndex + 3 | 0];
@@ -582,12 +551,11 @@ if (typeof kotlin === 'undefined') {
         arrOfPlot.v.add_11rb$(new CanvasTextItem(String.fromCharCode(coord.v.charCodeAt(1)), plot.x + 20, y.v + 20, last(arrOfPlot.v)));
         y.v += 20;
         posIndex = posIndex + 3 | 0;
-      }counter = counter + 1 | 0;
-    }
+      }}
     tmp$_4 = arrOfPlot.v.iterator();
     while (tmp$_4.hasNext()) {
-      var item_1 = tmp$_4.next();
-      canvasState.addItem_cgrhq8$(item_1);
+      var item_0 = tmp$_4.next();
+      canvasState.addItem_cgrhq8$(item_0);
     }
   }
   function continueFlow(canvasState) {
@@ -608,7 +576,8 @@ if (typeof kotlin === 'undefined') {
           canvasState.emptyItems();
           canvasState.notGraph();
           canvasState.clear();
-          parseTree(tokens);
+          generateVisuals(tokens);
+          canvasState.draw();
           flowState = flowState + 1 | 0;
         } else {
           modalDiv.style.display = 'none';
@@ -761,7 +730,7 @@ if (typeof kotlin === 'undefined') {
   package$project2.CanvasBarItem = CanvasBarItem;
   package$project2.CanvasEdgeItem = CanvasEdgeItem;
   package$project2.CanvasFillItem = CanvasFillItem;
-  package$project2.parseTree_kand9s$ = parseTree;
+  package$project2.generateVisuals_kand9s$ = generateVisuals;
   package$project2.continueFlow_v4m4ho$ = continueFlow;
   package$project2.main_kand9s$ = main;
   var tmp$, tmp$_0, tmp$_1, tmp$_2, tmp$_3, tmp$_4;

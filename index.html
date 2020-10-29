@@ -12,6 +12,7 @@
     <legend>Kotlin Graph Parser</legend>
     <div> <fieldset>
 <pre>
+BNF Grammar
 &lt;graph&gt;→ start &lt;plot_data&gt; stop
 &lt;plot_data&gt;→ &lt;plot&gt;
     | &lt;plot&gt; ; &lt;plot_data &gt;
@@ -22,7 +23,7 @@
 &lt;x&gt;→ a | b | c | d | e | f | g | h | i | j
 &lt;y&gt;→ 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
-    STOP to stop
+STOP to stop (close tab)
 </pre>
     </fieldset> </div><br>
     <span id="InputGoesHere"></span>
@@ -57,6 +58,9 @@
         padding: 20px;
         border: 1px solid #888;
         width: 80%; /* Could be more or less, depending on screen size */
+    }
+    input {
+        width: 80%;
     }
 </style>
 </body>
