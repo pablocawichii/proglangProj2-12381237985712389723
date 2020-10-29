@@ -16,10 +16,10 @@ if (typeof kotlin === 'undefined') {
   var toInt = Kotlin.kotlin.text.toInt_pdl1vz$;
   var numberToInt = Kotlin.numberToInt;
   var toByte = Kotlin.toByte;
-  var last = Kotlin.kotlin.collections.last_2p1efm$;
   var removeLast = Kotlin.kotlin.collections.removeLast_vvxzk3$;
   var asReversed = Kotlin.kotlin.collections.asReversed_vvxzk3$;
   var ensureNotNull = Kotlin.ensureNotNull;
+  var last = Kotlin.kotlin.collections.last_2p1efm$;
   var ArrayList_init = Kotlin.kotlin.collections.ArrayList_init_287e2$;
   var copyToArray = Kotlin.kotlin.collections.copyToArray;
   var ArrayList_init_0 = Kotlin.kotlin.collections.ArrayList_init_ww73n8$;
@@ -42,6 +42,7 @@ if (typeof kotlin === 'undefined') {
   var flowState;
   var derivationError;
   var parsedItems;
+  var canvasState;
   function get_context() {
     var tmp$;
     return Kotlin.isType(tmp$ = canvas.getContext('2d'), CanvasRenderingContext2D) ? tmp$ : throwCCE();
@@ -69,14 +70,8 @@ if (typeof kotlin === 'undefined') {
     window.setInterval(CanvasState_init$lambda(this), this.interval);
   }
   CanvasState.prototype.setAxis_vux9f0$ = function (x, y) {
-    if (x > 9)
-      this.xMax = 9;
-    else
-      this.xMax = x;
-    if (y > 9)
-      this.yMax = 9;
-    else
-      this.yMax = y;
+    this.xMax = x;
+    this.yMax = y;
   };
   CanvasState.prototype.addItem_cgrhq8$ = function (item) {
     this.items.add_11rb$(item);
@@ -153,14 +148,6 @@ if (typeof kotlin === 'undefined') {
     if (!this.changed)
       return;
     this.changed = false;
-    tmp$ = this.items.iterator();
-    while (tmp$.hasNext()) {
-      var item = tmp$.next();
-      item.draw_v4m4ho$(this);
-    }
-  };
-  CanvasState.prototype.forceDraw = function () {
-    var tmp$;
     tmp$ = this.items.iterator();
     while (tmp$.hasNext()) {
       var item = tmp$.next();
@@ -365,7 +352,6 @@ if (typeof kotlin === 'undefined') {
     this.y = 0.0;
     this.w = 0;
     this.x = toChar(this.coord1.charCodeAt(0) - 97) | 0;
-    console.log(this.x);
     this.y = toDouble(String.fromCharCode(this.coord1.charCodeAt(1)));
     this.w = toInt(this.coord2);
   }
@@ -440,7 +426,6 @@ if (typeof kotlin === 'undefined') {
   };
   CanvasFillItem.prototype.draw_v4m4ho$ = function (state) {
     var tmp$, tmp$_0;
-    console.log(this.x, this.y);
     var context = state.context;
     var width = context.canvas.width;
     var dstImg = context.getImageData(0.0, 0.0, canvas.width * 1.0, canvas.height * 1.0);
@@ -458,10 +443,9 @@ if (typeof kotlin === 'undefined') {
     fillColor[3] = 255;
     var list = ArrayList_init_0(1);
     for (var index = 0; index < 1; index++) {
-      list.add_11rb$(new Pos(60 + ((400 / state.xMax | 0) + 1 | 0) * this.x, 490 - (450 / state.yMax | 0) * this.y));
+      list.add_11rb$(new Pos(50 + ((400 / state.xMax | 0) + 1 | 0) * this.x, 500 - (450 / state.yMax | 0) * this.y));
     }
     var todo = list;
-    console.log(last(todo).x, last(todo).y);
     while (todo.size !== 0) {
       var pos = removeLast(todo);
       var x = pos.x;
@@ -503,7 +487,6 @@ if (typeof kotlin === 'undefined') {
   };
   function parseTree(tokens) {
     var tmp$, tmp$_0, tmp$_1, tmp$_2, tmp$_3, tmp$_4;
-    var canvasState = new CanvasState(canvas);
     var width = canvasState.width;
     var y = {v: 40.0};
     var semi = 0;
@@ -530,6 +513,7 @@ if (typeof kotlin === 'undefined') {
           var k = tmp$_1.next();
           if (matches(k.str, '<plot_data>')) {
             arrOfPlot.v.add_11rb$(new CanvasTextItem('<plot>', k.x - 100, y.v, k));
+            arrOfPlot.v.add_11rb$(new CanvasTextItem(';', k.x, y.v, k));
             arrOfPlot.v.add_11rb$(new CanvasTextItem('<plot_data>', k.x + 100, y.v, k));
             y.v += 20;
             semi = semi + 2 | 0;
@@ -565,35 +549,37 @@ if (typeof kotlin === 'undefined') {
         var coord2 = tokens[posIndex + 3 | 0];
         if (matches(tokens[posIndex], 'bar')) {
           arrOfPlot.v.add_11rb$(new CanvasTextItem('bar', ensureNotNull(plot).x - 50, y.v, plot));
-          arrOfPlot.v.add_11rb$(new CanvasTextItem('<y>', plot.x + 25, y.v, plot));
-          arrOfPlot.v.add_11rb$(new CanvasTextItem(String.fromCharCode(coord2.charCodeAt(0)), plot.x + 25, y.v + 20, last(arrOfPlot.v)));
+          arrOfPlot.v.add_11rb$(new CanvasTextItem('<y>', plot.x + 20, y.v, plot));
+          arrOfPlot.v.add_11rb$(new CanvasTextItem(String.fromCharCode(coord2.charCodeAt(0)), plot.x + 20, y.v + 20, last(arrOfPlot.v)));
           parsedItems.add_11rb$(new CanvasBarItem(coord1, coord2));
         } else {
-          arrOfPlot.v.add_11rb$(new CanvasTextItem('edge', ensureNotNull(plot).x - 50, y.v, plot));
-          arrOfPlot.v.add_11rb$(new CanvasTextItem('<x>', plot.x + 10, y.v, plot));
-          arrOfPlot.v.add_11rb$(new CanvasTextItem(String.fromCharCode(coord2.charCodeAt(0)), plot.x + 10, y.v + 20, last(arrOfPlot.v)));
-          arrOfPlot.v.add_11rb$(new CanvasTextItem('<y>', plot.x + 25, y.v, plot));
-          arrOfPlot.v.add_11rb$(new CanvasTextItem(String.fromCharCode(coord2.charCodeAt(1)), plot.x + 25, y.v + 20, last(arrOfPlot.v)));
+          arrOfPlot.v.add_11rb$(new CanvasTextItem('edge', ensureNotNull(plot).x - 55, y.v, plot));
+          arrOfPlot.v.add_11rb$(new CanvasTextItem('<x>', plot.x + 20, y.v, plot));
+          arrOfPlot.v.add_11rb$(new CanvasTextItem(String.fromCharCode(coord2.charCodeAt(0)), plot.x + 20, y.v + 20, last(arrOfPlot.v)));
+          arrOfPlot.v.add_11rb$(new CanvasTextItem('<y>', plot.x + 40, y.v, plot));
+          arrOfPlot.v.add_11rb$(new CanvasTextItem(String.fromCharCode(coord2.charCodeAt(1)), plot.x + 40, y.v + 20, last(arrOfPlot.v)));
           parsedItems.add_11rb$(new CanvasEdgeItem(coord1, coord2));
         }
-        arrOfPlot.v.add_11rb$(new CanvasTextItem('<x>', plot.x - 20, y.v, plot));
-        arrOfPlot.v.add_11rb$(new CanvasTextItem(String.fromCharCode(coord1.charCodeAt(0)), plot.x - 20, y.v + 20, last(arrOfPlot.v)));
+        arrOfPlot.v.add_11rb$(new CanvasTextItem('<x>', plot.x - 30, y.v, plot));
+        arrOfPlot.v.add_11rb$(new CanvasTextItem(String.fromCharCode(coord1.charCodeAt(0)), plot.x - 30, y.v + 20, last(arrOfPlot.v)));
         arrOfPlot.v.add_11rb$(new CanvasTextItem('<y>', plot.x - 10, y.v, plot));
         arrOfPlot.v.add_11rb$(new CanvasTextItem(String.fromCharCode(coord1.charCodeAt(1)), plot.x - 10, y.v + 20, last(arrOfPlot.v)));
-        arrOfPlot.v.add_11rb$(new CanvasTextItem(',', plot.x - 5, y.v, plot));
+        arrOfPlot.v.add_11rb$(new CanvasTextItem(',', plot.x + 10, y.v, plot));
         y.v += 20;
         posIndex = posIndex + 5 | 0;
       } else if (matches(tokens[posIndex], 'axis') || matches(tokens[posIndex], 'fill')) {
-        var coord = tokens[posIndex + 1 | 0];
+        var coord = {v: tokens[posIndex + 1 | 0]};
         if (matches(tokens[posIndex], 'fill')) {
-          arrOfPlot.v.add_11rb$(new CanvasTextItem('fill', ensureNotNull(plot).x - 30, y.v, plot));
-          parsedItems.add_11rb$(new CanvasFillItem(coord));
+          arrOfPlot.v.add_11rb$(new CanvasTextItem('fill', ensureNotNull(plot).x - 20, y.v, plot));
+          parsedItems.add_11rb$(new CanvasFillItem(coord.v));
         } else {
-          arrOfPlot.v.add_11rb$(new CanvasTextItem('axis', ensureNotNull(plot).x - 30, y.v, plot));
-          canvasState.setAxis_vux9f0$((coord.charCodeAt(0) | 0) - 97 | 0, toInt(String.fromCharCode(coord.charCodeAt(1))));
+          arrOfPlot.v.add_11rb$(new CanvasTextItem('axis', ensureNotNull(plot).x - 20, y.v, plot));
+          canvasState.setAxis_vux9f0$((coord.v.charCodeAt(0) | 0) - 97 | 0, toInt(String.fromCharCode(coord.v.charCodeAt(1))));
         }
-        arrOfPlot.v.add_11rb$(new CanvasTextItem('<x>', plot.x - 20, y.v, plot));
-        arrOfPlot.v.add_11rb$(new CanvasTextItem('<y>', plot.x - 10, y.v, plot));
+        arrOfPlot.v.add_11rb$(new CanvasTextItem('<x>', plot.x, y.v, plot));
+        arrOfPlot.v.add_11rb$(new CanvasTextItem(String.fromCharCode(coord.v.charCodeAt(0)), plot.x, y.v + 20, last(arrOfPlot.v)));
+        arrOfPlot.v.add_11rb$(new CanvasTextItem('<y>', plot.x + 20, y.v, plot));
+        arrOfPlot.v.add_11rb$(new CanvasTextItem(String.fromCharCode(coord.v.charCodeAt(1)), plot.x + 20, y.v + 20, last(arrOfPlot.v)));
         y.v += 20;
         posIndex = posIndex + 3 | 0;
       }counter = counter + 1 | 0;
@@ -609,7 +595,6 @@ if (typeof kotlin === 'undefined') {
       case 0:
         tokens = parseString(inp.value);
         canvas.hidden = true;
-        console.log(tokens);
         derivationError = false;
         processInput(tokens);
         modalDiv.style.display = 'block';
@@ -645,17 +630,13 @@ if (typeof kotlin === 'undefined') {
         break;
     }
   }
-  function main$lambda$lambda(closure$canvasState) {
-    return function (it) {
-      continueFlow(closure$canvasState);
-      return Unit;
-    };
+  function main$lambda$lambda(it) {
+    continueFlow(canvasState);
+    return Unit;
   }
-  function main$lambda$lambda_0(closure$canvasState) {
-    return function (it) {
-      continueFlow(closure$canvasState);
-      return Unit;
-    };
+  function main$lambda$lambda_0(it) {
+    continueFlow(canvasState);
+    return Unit;
   }
   function main$lambda(it) {
     var tmp$;
@@ -676,9 +657,9 @@ if (typeof kotlin === 'undefined') {
     ensureNotNull(document.getElementById('InputGoesHere')).appendChild(inp);
     button.innerText = 'Input';
     ensureNotNull(document.getElementById('ButtonGoesHere')).appendChild(button);
-    var canvasState = new CanvasState(canvas);
-    contButton.addEventListener('click', main$lambda$lambda(canvasState));
-    button.addEventListener('click', main$lambda$lambda_0(canvasState));
+    canvasState = new CanvasState(canvas);
+    contButton.addEventListener('click', main$lambda$lambda);
+    button.addEventListener('click', main$lambda$lambda_0);
     return Unit;
   }
   function main(args) {
@@ -747,6 +728,14 @@ if (typeof kotlin === 'undefined') {
       parsedItems = value;
     }
   });
+  Object.defineProperty(package$project2, 'canvasState', {
+    get: function () {
+      return canvasState;
+    },
+    set: function (value) {
+      canvasState = value;
+    }
+  });
   Object.defineProperty(package$project2, 'context', {
     get: get_context
   });
@@ -796,6 +785,7 @@ if (typeof kotlin === 'undefined') {
     list.add_11rb$(new CanvasBarItem('  ', '  '));
   }
   parsedItems = list;
+  canvasState = new CanvasState(canvas);
   lineString = '';
   main([]);
   Kotlin.defineModule('KotlinJS', _);

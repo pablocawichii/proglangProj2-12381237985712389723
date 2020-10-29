@@ -16,6 +16,8 @@ var tokens = Array(0) { i -> ""}
 var flowState = 0
 var derivationError = false
 var parsedItems = MutableList<CanvasItem>(0) { i -> CanvasBarItem("  ", "  ") }
+var canvasState:CanvasState = CanvasState(canvas)
+
 
 val context: CanvasRenderingContext2D
     get() {
@@ -43,15 +45,8 @@ class CanvasState(val canvas: HTMLCanvasElement) {
     }
 
     fun setAxis(x: Int, y: Int){
-        if(x > 9)
-            xMax = 9
-        else
-            xMax = x
-
-        if(y > 9)
-            yMax = 9
-        else
-            yMax = y
+        xMax = x
+        yMax = y
     }
 
     fun addItem(item: CanvasItem) {
@@ -111,7 +106,6 @@ class CanvasState(val canvas: HTMLCanvasElement) {
         context.fillRect(50.0, 50.0, 450.0, 1.0)
 
 
-
         var k = 0
         for (i in 0 until yMax + 1 ) {
             context.strokeStyle = "#000000"
@@ -144,15 +138,8 @@ class CanvasState(val canvas: HTMLCanvasElement) {
         if (!changed) return
 
         changed = false
-//        clear()
 
-        for(item in items) {
-            item.draw(this)
-        }
         // Add drawings
-    }
-
-    fun forceDraw() {
         for(item in items) {
             item.draw(this)
         }
@@ -401,7 +388,6 @@ class CanvasBarItem(val coord1: String, val coord2: String) : CanvasItem() {
     var w: Int = 0
     init {
         x = (coord1[0] - 97).toDouble()
-        console.log(x)
         y = (coord1[1]).toString().toDouble()
         w= (coord2).toInt()
     }
@@ -470,7 +456,6 @@ class CanvasFillItem(val coord: String) : CanvasItem() {
     }
 
     override fun draw(state: CanvasState) {
-        console.log(x, y)
         val context = state.context
         val width = context.canvas.width
         var dstImg = context.getImageData(0.0, 0.0, canvas.width * 1.0, canvas.height * 1.0)
@@ -490,8 +475,7 @@ class CanvasFillItem(val coord: String) : CanvasItem() {
         fillColor[2] = 255
         fillColor[3] = 255
 
-        var todo = MutableList<Pos>(1) { i -> Pos(60+((400/state.xMax+1) * x), 490 - ((450/state.yMax) * y)) }
-        console.log(todo.last().x, todo.last().y)
+        var todo = MutableList<Pos>(1) { i -> Pos(50+((400/state.xMax+1) * x), 500 - ((450/state.yMax) * y)) }
 
         while (todo.size != 0) {
             var pos = todo.removeLast()
@@ -546,7 +530,7 @@ class CanvasFillItem(val coord: String) : CanvasItem() {
 
 fun parseTree(tokens: Array<String>) {
 
-    val canvasState = CanvasState(canvas)
+
 
     val width = canvasState.width.toDouble()
     var y = 40.0
@@ -570,6 +554,7 @@ fun parseTree(tokens: Array<String>) {
             inner@ for (k in arrOfPlot.asReversed()){
                 if(k.str.matches("<plot_data>")){
                     arrOfPlot.add(CanvasTextItem("<plot>", (k.x)-100, y, k))
+                    arrOfPlot.add(CanvasTextItem(";", (k.x), y, k))
                     arrOfPlot.add(CanvasTextItem("<plot_data>", (k.x)+100, y, k))
                     y+= 20
                     semi += 2
@@ -588,18 +573,6 @@ fun parseTree(tokens: Array<String>) {
         }
     }
 
-
-
-
-    // high scope x and y,
-    // x will be calculated dynamically
-    // y will slowly fall
-    // First find amount of statements based on ;
-    // only need a single array
-    // Array to hold <plot>
-    // Loop through and find if bin, edge, ect.
-    // create and place into canvas, do entire segment at bin
-    //
 
     var plotPos = MutableList<CanvasTextItem>(0) { i -> arrOfPlot[0]}
     for (item in arrOfPlot) {
@@ -620,26 +593,26 @@ fun parseTree(tokens: Array<String>) {
 
             if (tokens[posIndex].matches("bar")) {
                 arrOfPlot.add(CanvasTextItem("bar", (plot!!.x)-50, y, plot))
-                arrOfPlot.add(CanvasTextItem("<y>", (plot.x)+25, y, plot))
-                arrOfPlot.add(CanvasTextItem(coord2[0].toString(),(plot.x)+25, y + 20,  arrOfPlot.last()))
+                arrOfPlot.add(CanvasTextItem("<y>", (plot.x)+20, y, plot))
+                arrOfPlot.add(CanvasTextItem(coord2[0].toString(),(plot.x)+20, y + 20,  arrOfPlot.last()))
 
                 parsedItems.add(CanvasBarItem(coord1,coord2))
 
             } else {
-                arrOfPlot.add(CanvasTextItem("edge", (plot!!.x)-50, y, plot))
-                arrOfPlot.add(CanvasTextItem("<x>", (plot.x)+10, y, plot))
-                arrOfPlot.add(CanvasTextItem(coord2[0].toString(),(plot.x)+10, y + 20,  arrOfPlot.last()))
-                arrOfPlot.add(CanvasTextItem("<y>", (plot.x)+25, y, plot))
-                arrOfPlot.add(CanvasTextItem(coord2[1].toString(),(plot.x)+25, y + 20,  arrOfPlot.last()))
+                arrOfPlot.add(CanvasTextItem("edge", (plot!!.x)-55, y, plot))
+                arrOfPlot.add(CanvasTextItem("<x>", (plot.x)+20, y, plot))
+                arrOfPlot.add(CanvasTextItem(coord2[0].toString(),(plot.x)+20, y + 20,  arrOfPlot.last()))
+                arrOfPlot.add(CanvasTextItem("<y>", (plot.x)+40, y, plot))
+                arrOfPlot.add(CanvasTextItem(coord2[1].toString(),(plot.x)+40, y + 20,  arrOfPlot.last()))
 
                 parsedItems.add(CanvasEdgeItem(coord1,coord2))
             }
 
-            arrOfPlot.add(CanvasTextItem("<x>", (plot.x)-20, y, plot))
-            arrOfPlot.add(CanvasTextItem(coord1[0].toString(),(plot.x)-20, y + 20,  arrOfPlot.last()))
+            arrOfPlot.add(CanvasTextItem("<x>", (plot.x)-30, y, plot))
+            arrOfPlot.add(CanvasTextItem(coord1[0].toString(),(plot.x)-30, y + 20,  arrOfPlot.last()))
             arrOfPlot.add(CanvasTextItem("<y>", (plot.x)-10, y, plot))
             arrOfPlot.add(CanvasTextItem(coord1[1].toString(),(plot.x)-10, y + 20,  arrOfPlot.last()))
-            arrOfPlot.add(CanvasTextItem(",", (plot.x)-5, y, plot))
+            arrOfPlot.add(CanvasTextItem(",", (plot.x)+10, y, plot))
 
 
             y+= 20
@@ -649,15 +622,19 @@ fun parseTree(tokens: Array<String>) {
 
             var coord = tokens[posIndex + 1]
             if (tokens[posIndex].matches("fill")) {
-                arrOfPlot.add(CanvasTextItem("fill", (plot!!.x)-30, y, plot))
+                arrOfPlot.add(CanvasTextItem("fill", (plot!!.x)-20, y, plot))
                 parsedItems.add(CanvasFillItem(coord))
             } else {
-                arrOfPlot.add(CanvasTextItem("axis", (plot!!.x)-30, y, plot))
-                // Process Axis
-                canvasState.setAxis(coord[0].toInt() - 97, coord[1].toString().toInt())
+                arrOfPlot.add(CanvasTextItem("axis", (plot!!.x)-20, y, plot))
+
+                canvasState.apply {
+                    setAxis(coord[0].toInt() - 97, coord[1].toString().toInt())
+                }
             }
-            arrOfPlot.add(CanvasTextItem("<x>", (plot.x)-20, y, plot))
-            arrOfPlot.add(CanvasTextItem("<y>", (plot.x)-10, y, plot))
+            arrOfPlot.add(CanvasTextItem("<x>", (plot.x), y, plot))
+            arrOfPlot.add(CanvasTextItem(coord[0].toString(),(plot.x), y + 20,  arrOfPlot.last()))
+            arrOfPlot.add(CanvasTextItem("<y>", (plot.x)+20, y, plot))
+            arrOfPlot.add(CanvasTextItem(coord[1].toString(),(plot.x)+20, y + 20,  arrOfPlot.last()))
 
             y+= 20
 
@@ -684,7 +661,6 @@ fun continueFlow(canvasState: CanvasState){
             tokens = parseString(inp.value)
             canvas.hidden = true
 
-            console.log(tokens)
             derivationError = false
             processInput(tokens)
 
@@ -702,7 +678,6 @@ fun continueFlow(canvasState: CanvasState){
                     emptyItems()
                     notGraph()
                     clear()
-
                 }
                 parseTree(tokens)
                 flowState++
@@ -730,7 +705,7 @@ fun continueFlow(canvasState: CanvasState){
     }
 }
 
-//    start bar a3,5; edge a3,b5 ; fill b5 ; axis e9 stop
+// Example code: start bar a3,5; edge a3,b5 ; fill b5 ; axis e9 stop
 fun main(args: Array<String>) {
     window.onload = {
         modalDiv.style.display = "none"
@@ -756,10 +731,7 @@ fun main(args: Array<String>) {
         button.innerText = "Input"
         document.getElementById("ButtonGoesHere")!!.appendChild(button)
 
-//        val parseTreeDiv = document.getElementById("parseTree") as HTMLDivElement
-//                parseTreeDiv.innerHTML = "<p> Parse Tree could not be created </p>"
-
-        val canvasState = CanvasState(canvas);
+        canvasState = CanvasState(canvas)
 
         contButton.addEventListener("click", {
             continueFlow(canvasState)
