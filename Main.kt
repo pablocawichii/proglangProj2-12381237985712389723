@@ -1,48 +1,88 @@
 package project2
 
+import org.khronos.webgl.*
 import org.w3c.dom.*
-import org.w3c.dom.events.MouseEvent
 import kotlin.browser.document
 import kotlin.browser.window
-import kotlin.math.*
-
-
 
 val inp = document.createElement("input") as HTMLInputElement
 val button = document.createElement("button") as HTMLButtonElement
 val canvas = document.createElement("canvas") as HTMLCanvasElement
+val modalCont = document.createElement("div") as HTMLDivElement
+val modal = document.createElement("div") as HTMLDivElement
+val modalDiv = document.createElement("div") as HTMLDivElement
 
-var derivation : HTMLDivElement = document.createElement("div") as HTMLDivElement
-
+var tokens = Array(0) { i -> ""}
+var flowState = 0
+var derivationError = false
+var parsedItems = MutableList<CanvasItem>(0) { i -> CanvasBarItem("  ", "  ") }
 
 val context: CanvasRenderingContext2D
     get() {
         return canvas.getContext("2d") as CanvasRenderingContext2D
     }
 
+class Pos (val x: Double, val y: Double) {}
+
 class CanvasState(val canvas: HTMLCanvasElement) {
     var width = canvas.width
-    var height = canvas.height
+    var height = this.canvas.height
     val context = project2.context
     var changed = true
     val interval = 1000 / 30
-    var xMax = 10;
-    var yMax = 10;
+    var xMax = 9
+    var yMax = 9
     var graph = false
+    var items = mutableListOf<CanvasItem>()
+
 
     init {
-
         window.setInterval({
             draw()
         }, interval)
     }
 
+    fun setAxis(x: Int, y: Int){
+        if(x > 9)
+            xMax = 9
+        else
+            xMax = x
+
+        if(y > 9)
+            yMax = 9
+        else
+            yMax = y
+    }
+
+    fun addItem(item: CanvasItem) {
+        items.add(item)
+        changed = true
+    }
+
+    fun addItems(newItems: MutableList<CanvasItem>) {
+        for(i in newItems) {
+            addItem(i)
+        }
+
+        changed = true
+    }
+
+    fun emptyItems() {
+        while(items.lastOrNull() != null) {
+            items.removeAt(0)
+        }
+        clear()
+        changed = true
+    }
+
     fun isGraph() {
         graph = true
+        changed = true
     }
 
     fun notGraph() {
-        graph = true
+        graph = false
+        changed = true
     }
 
     fun drawGraph() {
@@ -55,6 +95,10 @@ class CanvasState(val canvas: HTMLCanvasElement) {
         context.fillStyle = "#000000"
         context.fillRect(50.0, 50.0, 1.0, 450.0)
 
+        context.fillStyle = "#000000"
+        context.fillRect(500.0, 50.0, 1.0, 450.0)
+
+
         // X - Axis
         context.strokeStyle = "#000000"
         context.lineWidth = 1.0
@@ -63,45 +107,26 @@ class CanvasState(val canvas: HTMLCanvasElement) {
         context.fillStyle = "#000000"
         context.fillRect(50.0, 500.0, 450.0, 1.0)
 
-        if(yMax >= 20) {
-            var k = 0
-            for (i in 0 until yMax + 1) {
-                if(i%(yMax/10) == 0){
-                    context.strokeStyle = "#000000"
-                    context.lineWidth = 1.0
-                    context.strokeText(i.toString(), 25.0, 500.0 - ((450.0/yMax) * k))
-                    k+= yMax/10;
-                }
-            }
-        } else {
-            var k = 0
-            for (i in 0 until yMax + 1 ) {
-                context.strokeStyle = "#000000"
-                context.lineWidth = 1.0
-                context.strokeText(i.toString(), 25.0, 500.0 - ((450.0/yMax) * k))
-                k++
-            }
+        context.fillStyle = "#000000"
+        context.fillRect(50.0, 50.0, 450.0, 1.0)
+
+
+
+        var k = 0
+        for (i in 0 until yMax + 1 ) {
+            context.strokeStyle = "#000000"
+            context.lineWidth = 1.0
+            context.strokeText(i.toString(), 25.0, 500.0 - ((450.0/yMax) * k))
+            k++
         }
 
-        if(xMax >= 20) {
 
-            var k = 0
-            for (i in 0 until xMax + 1){
-                if(i%(xMax/10) == 0){
-                    context.strokeStyle = "#000000"
-                    context.lineWidth = 1.0
-                    context.strokeText(i.toString(), 50.0 + ((450.0/xMax ) * k), 550.0)
-                    k+= xMax/10;
-                }
-            }
-        } else {
-            var k = 0
-            for (i in 0 until xMax + 1){
-                context.strokeStyle = "#000000"
-                context.lineWidth = 1.0
-                context.strokeText(i.toString(), 50.0 + ((450.0/xMax) * k), 550.0)
-                k++
-            }
+        k = 0
+        for (i in 0 until xMax + 1){
+            context.strokeStyle = "#000000"
+            context.lineWidth = 1.0
+            context.strokeText((97 + i).toChar().toString(), 70.0 + ((410.0/xMax) * k), 550.0)
+            k++
         }
     }
 
@@ -119,30 +144,39 @@ class CanvasState(val canvas: HTMLCanvasElement) {
         if (!changed) return
 
         changed = false
+//        clear()
 
-        clear()
-
+        for(item in items) {
+            item.draw(this)
+        }
         // Add drawings
     }
+
+    fun forceDraw() {
+        for(item in items) {
+            item.draw(this)
+        }
+    }
+
 }
 
 var lineString = ""
-
 fun processInput(tokens: Array<String>) : Boolean {
-// MUST ADD OUTPUTS FOR THESE
+    if(tokens[0].matches("STOP")) {
+        window.close()
+    }
 
-    derivation.innerHTML = "Program<br>"
+    modal.innerHTML = "Program<br>"
 
     if(!tokens[0].matches("start")) {
         return generateError(0, "Program Does not Begin With 'start'", tokens)
     }
 
     if(!tokens[tokens.size-1].matches("stop")) {
-
         return generateError(tokens.size-1, "Program Does not End With 'stop'", tokens)
     }
 
-    derivation.innerHTML += "Program -&gt; start &lt;plot_data&gt; stop<br>"
+    modal.innerHTML += "Program -&gt; start &lt;plot_data&gt; stop<br>"
 
     lineString = "start &lt;plot_data&gt; stop<br>"
     var posIndex = 1
@@ -163,6 +197,7 @@ fun processInput(tokens: Array<String>) : Boolean {
 
         generateLine(lineString)
 
+
         if(tokens[posIndex].matches("bar") || tokens[posIndex].matches("edge")){
             if(posIndex+4 > tokens.size){
                 return generateError(posIndex, "Statement has not enough arguments.", tokens)
@@ -178,24 +213,24 @@ fun processInput(tokens: Array<String>) : Boolean {
             if(!tokens[posIndex+2].matches(","))
                 return generateError(posIndex, "Incorrect Syntax.", tokens)
 
-            var coord1 = tokens[posIndex+1]
-            var coord2 = tokens[posIndex+3]
+            val coord1 = tokens[posIndex+1]
+            val coord2 = tokens[posIndex+3]
 
             if(tokens[posIndex].matches("bar")) {
                 lineString = lineString.replace("&lt;plot&gt;", "bar &lt;x&gt;&lt;y&gt;,&lt;y&gt;")
                 generateLine(lineString)
 
                 if(!checkCoord(coord1, posIndex, tokens)){
-                    return false;
+                    return false
                 }
 
                 if(coord2.length != 1) {
                     generateError(posIndex, "Coord Y is not correct length", tokens)
-                    return false;
+                    return false
                 }
                 if(!checkY(coord2[0])){
                     generateError(posIndex, "Coord Y is not valid", tokens)
-                    return false;
+                    return false
                 }
                 lineString = lineString.replaceFirst("&lt;y&gt;", coord2[0].toString())
                 generateLine(lineString)
@@ -206,10 +241,10 @@ fun processInput(tokens: Array<String>) : Boolean {
                 generateLine(lineString)
                 // Process Edge
                 if(!checkCoord(coord1, posIndex, tokens)){
-                    return false;
+                    return false
                 }
                 if(!checkCoord(coord2, posIndex, tokens)){
-                    return false;
+                    return false
                 }
             }
 
@@ -228,20 +263,20 @@ fun processInput(tokens: Array<String>) : Boolean {
                 return generateError(posIndex, "Statement has too many arguments.", tokens)
 
 
-            var coord = tokens[posIndex+1]
+            val coord = tokens[posIndex+1]
             if(tokens[posIndex].matches("fill")){
                 lineString = lineString.replace("&lt;plot&gt;", "fill &lt;x&gt;&lt;y&gt;")
                 generateLine(lineString)
                 //Process Fill
                 if(!checkCoord(coord, posIndex, tokens)){
-                    return false;
+                    return false
                 }
 
             } else {
                 lineString = lineString.replace("&lt;plot&gt;", "axis &lt;x&gt;&lt;y&gt;")
                 generateLine(lineString)
                 if(!checkCoord(coord, posIndex, tokens)){
-                    return false;
+                    return false
                 }
 
                 // Process Axis
@@ -262,23 +297,23 @@ fun processInput(tokens: Array<String>) : Boolean {
 fun checkCoord(str: String, posIndex: Int, tokens: Array<String>) : Boolean {
     if (str.length != 2) {
         generateError(posIndex, "Incorrect Syntax of &lt;x&gt;&lt;y&gt;", tokens)
-        return false;
+        return false
     }
     if(!checkX(str[0])){
         generateError(posIndex, "Coord X is not valid", tokens)
-        return false;
+        return false
     }
     lineString = lineString.replaceFirst("&lt;x&gt;", str[0].toString())
     generateLine(lineString)
 
     if(!checkY(str[1])){
         generateError(posIndex, "Coord Y is not valid", tokens)
-        return false;
+        return false
     }
     lineString = lineString.replaceFirst("&lt;y&gt;", str[1].toString())
     generateLine(lineString)
 
-    return true;
+    return true
 }
 
 fun checkX(char: Char) : Boolean {
@@ -301,16 +336,13 @@ fun checkY(char: Char) : Boolean {
 }
 
 fun generateLine(str: String){
-    var outputStr = "Program -> $str <br>"
+    val outputStr = "Program -> $str <br>"
 
-    derivation.innerHTML += outputStr
-
-    (document.getElementById("derivation") as HTMLDivElement).innerHTML = derivation.innerHTML
-
+    modal.innerHTML += outputStr
 }
 
 fun generateError(errorPos: Int, errorMessage: String, tokens: Array<String>) : Boolean {
-//    start bar a3,5; edge a3,b5 stop
+
     var errorStr = ""
     var i = 0
     while (!(errorPos+i > tokens.size - 1 || tokens[errorPos+i].matches(";") )){
@@ -319,7 +351,8 @@ fun generateError(errorPos: Int, errorMessage: String, tokens: Array<String>) : 
     }
     generateLine("<span style='color:red;'>" + errorMessage + "</span>")
     generateLine("<span style='color:red;'>" + errorStr + "</span>")
-    return false;
+    derivationError = true
+    return false
 }
 
 fun parseString(str: String) : Array<String>  {
@@ -331,50 +364,235 @@ fun parseString(str: String) : Array<String>  {
 
 }
 
-class canvasTextItem(val str: String, val x: Double, val y: Double, val state: CanvasState,val parent: canvasTextItem?) {
-    val textSize = 1;
-    val color = "#FFF";
-    val lineColor = "#000"
+abstract class CanvasItem() {
+    val color = "#000"
+    val lineColor = "#FFF"
 
-    fun draw(state: CanvasState) {
+    abstract fun draw(state: CanvasState)
+
+}
+class CanvasTextItem(val str: String, var x: Double, val y: Double, val parent: CanvasTextItem?) : CanvasItem() {
+    val textSize = 1.0
+
+    override fun draw(state: CanvasState) {
+        x -= 130
+
         val  context = state.context
         context.save()
-        context.strokeStyle = color
-        context.strokeText(str, x, y)
+        context.lineWidth = textSize
         context.strokeStyle = lineColor
         context.beginPath()
         context.moveTo(x,y)
         if(parent != null) {
             context.lineTo(parent.x, parent.y)
         }
-
         context.stroke()
+        context.strokeStyle = color
+        context.strokeText(str, x, y)
         context.restore()
 
     }
 
 
 }
+class CanvasBarItem(val coord1: String, val coord2: String) : CanvasItem() {
+    var x: Double = 0.0
+    var y: Double = 0.0
+    var w: Int = 0
+    init {
+        x = (coord1[0] - 97).toDouble()
+        console.log(x)
+        y = (coord1[1]).toString().toDouble()
+        w= (coord2).toInt()
+    }
+    override fun draw(state: CanvasState) {
+        val  context = state.context
+        context.save()
+        context.strokeStyle = color
+        context.lineWidth = 1.0
+        var height = ((450.0/state.yMax) * y)
+        context.strokeRect(50+((400.0/state.xMax+1) * x),(500-height),((450.0/(state.xMax+1)) * w).toDouble(), height)
+    }
+
+}
+class CanvasEdgeItem(val coord1: String, val coord2: String) : CanvasItem() {
+    var x: Double = (coord1[0] - 97).toDouble()
+    var y: Double = (coord1[1]).toString().toDouble()
+    var x2: Double = (coord2[0] - 97).toInt().toDouble()
+    var y2: Double = (coord2[1]).toString().toDouble()
+
+
+    override fun draw(state: CanvasState) {
+        val  context = state.context
+        context.save()
+        context.beginPath()
+        context.strokeStyle = "000000"
+        context.lineWidth = 1.0
+        context.moveTo(50+((400.0/state.xMax+1) * x), 500 - ((450.0/state.yMax) * y))
+        context.lineTo(50+((400.0/state.xMax+1) * x2), 500 - ((450.0/state.yMax) * y2))
+        context.stroke()
+        context.closePath()
+        context.restore()
+
+    }
+
+}
+class CanvasFillItem(val coord: String) : CanvasItem() {
+    var x: Double = 0.0
+    var y: Double = 0.0
+    init {
+        x = (coord[0] - 97).toDouble()
+        y = (coord[1]).toString().toDouble()
+    }
+
+
+    fun getPixelPos(x: Double, y: Double) : Int {
+        return ((y * canvas.width + x) * 4).toInt()
+    }
+
+    fun matchStartColor(data: Uint8ClampedArray, pos: Int, startColor: Uint8ClampedArray): Boolean {
+
+        return (
+                data.get(pos + 0) == startColor.get(0) &&
+                        data.get(pos + 1) == startColor.get(1) &&
+                        data.get(pos + 2) == startColor.get(2) &&
+                        data.get(pos + 3) == startColor.get(3)
+                )
+    }
+
+    fun colorPixel(data: Uint8ClampedArray, pos: Int, color: Uint16Array): Uint8ClampedArray {
+        data.set(pos, color[0].toByte())
+        data.set(pos+1, color[1].toByte())
+        data.set(pos+2, color[2].toByte())
+        data.set(pos+3, color[3].toByte())
+
+        return data
+    }
+
+    override fun draw(state: CanvasState) {
+        console.log(x, y)
+        val context = state.context
+        val width = context.canvas.width
+        var dstImg = context.getImageData(0.0, 0.0, canvas.width * 1.0, canvas.height * 1.0)
+        var dstData = dstImg.data
+
+        var startCol = Uint8ClampedArray(4).unsafeCast<Uint16Array>()
+        startCol[0] = 208
+        startCol[1] = 208
+        startCol[2] = 208
+        startCol[3] = 255
+
+        var startColor = startCol.unsafeCast<Uint8ClampedArray>()
+
+        var fillColor = Uint8ClampedArray(4).unsafeCast<Uint16Array>()
+        fillColor[0] = 255
+        fillColor[1] = 255
+        fillColor[2] = 255
+        fillColor[3] = 255
+
+        var todo = MutableList<Pos>(1) { i -> Pos(60+((400/state.xMax+1) * x), 490 - ((450/state.yMax) * y)) }
+        console.log(todo.last().x, todo.last().y)
+
+        while (todo.size != 0) {
+            var pos = todo.removeLast()
+            var x = pos.x
+            var y = pos.y
+            var currentPos = getPixelPos(x, y)
+
+
+            while (y-- >= 0 && matchStartColor(dstData, currentPos, startColor)) {
+                currentPos -= width * 4
+            }
+
+
+            currentPos += width * 4
+            ++y
+            var reachLeft = false
+            var reachRight = false
+
+            while ((y++ < canvas.height - 1) && matchStartColor(dstData, currentPos, startColor)) {
+                var dstTemp = dstData
+                dstData = colorPixel(dstData, currentPos, fillColor)
+
+                if (x > 0) {
+                    if (matchStartColor(dstData, currentPos - 4, startColor)) {
+                        if (!reachLeft) {
+                            todo.add(Pos(x - 1, y))
+                            reachLeft = true
+                        }
+                    } else if (reachLeft) {
+                        reachLeft = false
+                    }
+                }
+                if (x < canvas.width - 1) {
+                    if (matchStartColor(dstData, currentPos + 4, startColor)) {
+                        if (!reachRight) {
+                            todo.add(Pos(x + 1, y))
+                            reachRight = true
+                        }
+                    } else if (reachRight) {
+                        reachRight = false
+                    }
+                }
+                currentPos += width * 4
+            }
+        }
+
+        context.putImageData(dstImg, 0.0, 0.0)
+
+
+    }
+}
 
 fun parseTree(tokens: Array<String>) {
-//    val canvasTree = document.createElement("canvas") as HTMLCanvasElement
-//
-    val parseTreeDiv = document.getElementById("parseTree") as HTMLDivElement
-//    val contextTree = canvasTree.getContext("2d") as CanvasRenderingContext2D
-//    contextTree.canvas.width = 600 // window.innerWidth.toInt()
-//    contextTree.canvas.height = 600 // window.innerHeight.toInt()
-    canvas.hidden = false;
-    parseTreeDiv!!.appendChild(canvas)
 
-    val canvasState = CanvasState(canvas);
+    val canvasState = CanvasState(canvas)
+
+    val width = canvasState.width.toDouble()
+    var y = 40.0
+    var semi = 0
+
+    for (item in parsedItems.asReversed()){
+        parsedItems.remove(item)
+    }
+
+    var arrOfPlot = MutableList<CanvasTextItem>(1) { i -> CanvasTextItem("Program", width/2, y, null) }
+    y += 20
+
+    arrOfPlot.add(CanvasTextItem("start", (width/2)-100, y, arrOfPlot[0]))
+    arrOfPlot.add(CanvasTextItem("<plot_data>", width/2, y, arrOfPlot[0]))
+    arrOfPlot.add(CanvasTextItem("stop", (width/2)+100, y, arrOfPlot[0]))
+    y += 20
 
 
-    var htmlString : Array<Array<String>> = Array(1) { i -> Array(1) { i -> "Program" } }
-//            "<h2>Parse Tree</h2><table style='width: 100;text-align: center'>"
+    for (i in 0 until tokens.size - 1){
+        if (tokens[i].matches(";")){
+            inner@ for (k in arrOfPlot.asReversed()){
+                if(k.str.matches("<plot_data>")){
+                    arrOfPlot.add(CanvasTextItem("<plot>", (k.x)-100, y, k))
+                    arrOfPlot.add(CanvasTextItem("<plot_data>", (k.x)+100, y, k))
+                    y+= 20
+                    semi += 2
+                    break@inner
+                }
+            }
+        }
+    }
+
+    for (k in arrOfPlot.asReversed()){
+        if(k.str.matches("<plot_data>")){
+            arrOfPlot.add(CanvasTextItem("<plot>", (k.x), y, k))
+            y+= 20
+            semi += 2
+            break
+        }
+    }
+
+
 
 
     // high scope x and y,
-    // x will be calculated dynamicall
+    // x will be calculated dynamically
     // y will slowly fall
     // First find amount of statements based on ;
     // only need a single array
@@ -383,19 +601,17 @@ fun parseTree(tokens: Array<String>) {
     // create and place into canvas, do entire segment at bin
     //
 
-    console.log(htmlString)
-
-    inner@ for (i in 1..tokens.size - 1) {
-        if (tokens[i].matches(";")) {
-//            htmlString += "<tr><td colspan=auto>plot</td><td colspan=auto>;</td><td colspan=auto>plot_data</td></tr>"
+    var plotPos = MutableList<CanvasTextItem>(0) { i -> arrOfPlot[0]}
+    for (item in arrOfPlot) {
+        if(item.str.matches("<plot>")){
+            plotPos.add(item)
         }
     }
 
-//        htmlString += "<tr><p></p></tr>"
-
     var posIndex = 1
+    var counter = 0
     while(posIndex < tokens.size - 1) {
-
+        var plot : CanvasTextItem = plotPos[counter]
 
         if (tokens[posIndex].matches("bar") || tokens[posIndex].matches("edge")) {
 
@@ -403,71 +619,155 @@ fun parseTree(tokens: Array<String>) {
             var coord2 = tokens[posIndex + 3]
 
             if (tokens[posIndex].matches("bar")) {
+                arrOfPlot.add(CanvasTextItem("bar", (plot!!.x)-50, y, plot))
+                arrOfPlot.add(CanvasTextItem("<y>", (plot.x)+25, y, plot))
+                arrOfPlot.add(CanvasTextItem(coord2[0].toString(),(plot.x)+25, y + 20,  arrOfPlot.last()))
+
+                parsedItems.add(CanvasBarItem(coord1,coord2))
 
             } else {
+                arrOfPlot.add(CanvasTextItem("edge", (plot!!.x)-50, y, plot))
+                arrOfPlot.add(CanvasTextItem("<x>", (plot.x)+10, y, plot))
+                arrOfPlot.add(CanvasTextItem(coord2[0].toString(),(plot.x)+10, y + 20,  arrOfPlot.last()))
+                arrOfPlot.add(CanvasTextItem("<y>", (plot.x)+25, y, plot))
+                arrOfPlot.add(CanvasTextItem(coord2[1].toString(),(plot.x)+25, y + 20,  arrOfPlot.last()))
 
+                parsedItems.add(CanvasEdgeItem(coord1,coord2))
             }
+
+            arrOfPlot.add(CanvasTextItem("<x>", (plot.x)-20, y, plot))
+            arrOfPlot.add(CanvasTextItem(coord1[0].toString(),(plot.x)-20, y + 20,  arrOfPlot.last()))
+            arrOfPlot.add(CanvasTextItem("<y>", (plot.x)-10, y, plot))
+            arrOfPlot.add(CanvasTextItem(coord1[1].toString(),(plot.x)-10, y + 20,  arrOfPlot.last()))
+            arrOfPlot.add(CanvasTextItem(",", (plot.x)-5, y, plot))
+
+
+            y+= 20
 
             posIndex += 5
         } else if (tokens[posIndex].matches("axis") || tokens[posIndex].matches("fill")) {
 
             var coord = tokens[posIndex + 1]
             if (tokens[posIndex].matches("fill")) {
-
+                arrOfPlot.add(CanvasTextItem("fill", (plot!!.x)-30, y, plot))
+                parsedItems.add(CanvasFillItem(coord))
             } else {
-
+                arrOfPlot.add(CanvasTextItem("axis", (plot!!.x)-30, y, plot))
                 // Process Axis
+                canvasState.setAxis(coord[0].toInt() - 97, coord[1].toString().toInt())
             }
+            arrOfPlot.add(CanvasTextItem("<x>", (plot.x)-20, y, plot))
+            arrOfPlot.add(CanvasTextItem("<y>", (plot.x)-10, y, plot))
+
+            y+= 20
+
 
             posIndex += 3
         }
+
+        counter++
     }
-    console.log("Asdf")
-//    parseTreeDiv.innerHTML = canvas.outerHTML // htmlString + "</table>"
+
+
+    for (item in arrOfPlot){
+        canvasState.apply {
+            addItem(item)
+        }
+    }
+
 }
 
+fun continueFlow(canvasState: CanvasState){
+    when(flowState) {
+        // 0 is browser state
+        0 -> {
+            tokens = parseString(inp.value)
+            canvas.hidden = true
+
+            console.log(tokens)
+            derivationError = false
+            processInput(tokens)
+
+            modalDiv.style.display = "block"
+            modal.style.display = "block"
+
+            flowState++
+        }
+        // 1 is derivation
+        1 -> {
+            modal.style.display = "none"
+            if(!derivationError){
+                canvas.hidden = false
+                canvasState.apply {
+                    emptyItems()
+                    notGraph()
+                    clear()
+
+                }
+                parseTree(tokens)
+                flowState++
+            } else {
+                modalDiv.style.display = "none"
+                flowState = 0
+            }
+        }
+        // 2 is parse tree
+        2 -> {
+            canvasState.apply {
+                emptyItems()
+                isGraph()
+                clear()
+                addItems(parsedItems)
+                draw()
+            }
+            flowState++
+        }
+        // 3 is graphic output
+        3 -> {
+            modalDiv.style.display = "none"
+            flowState = 0
+        }
+    }
+}
+
+//    start bar a3,5; edge a3,b5 ; fill b5 ; axis e9 stop
 fun main(args: Array<String>) {
     window.onload = {
-        val context = canvas.getContext("2d") as CanvasRenderingContext2D
+        modalDiv.style.display = "none"
+        modalDiv.classList.add("modal")
+        document.body!!.appendChild(modalDiv)
+
+        val contButton = document.createElement("button") as HTMLButtonElement
+        contButton.innerText = "Continue"
+        modalDiv!!.appendChild(contButton)
+
+        modalCont.classList.add("modal-content")
+        modalCont!!.appendChild(modal)
+        modalDiv!!.appendChild(modalCont)
+
         context.canvas.width = 600 // window.innerWidth.toInt()
         context.canvas.height = 600 // window.innerHeight.toInt()
-        context.canvas.hidden = true;
-        document.body!!.appendChild(canvas)
+        modalCont!!.appendChild(canvas)
 
         inp.placeholder = "Enter Code Here"
         inp.type = "String"
-        document.body!!.appendChild(inp)
+        document.getElementById("InputGoesHere")!!.appendChild(inp)
 
         button.innerText = "Input"
-        document.body!!.appendChild(button)
+        document.getElementById("ButtonGoesHere")!!.appendChild(button)
 
-        val parseTreeDiv = document.getElementById("parseTree") as HTMLDivElement
+//        val parseTreeDiv = document.getElementById("parseTree") as HTMLDivElement
+//                parseTreeDiv.innerHTML = "<p> Parse Tree could not be created </p>"
 
         val canvasState = CanvasState(canvas);
 
-        (document.getElementById("derivation") as HTMLDivElement).innerHTML = "Derivation"
-//        context.beginPath()
-//        context.lineWidth = 5.0
-//        context.moveTo(position.x, position.y)
-//        context.lineTo(Kotlin.centre.x, Kotlin.centre.y)
-//        context.strokeStyle = "#FFF"
-//        context.stroke()
-//        context.closePath()
-
-        button.addEventListener("click", {
-            val tokens = parseString(inp.value);
-            console.log(tokens);
-            if (!processInput(tokens)) {
-                parseTreeDiv.innerHTML = "<p> Parse Tree could not be created </p>"
-                canvas.hidden = true;
-            } else {
-                parseTree(tokens);
-                canvas.hidden = false;
-
-            }
-
+        contButton.addEventListener("click", {
+            continueFlow(canvasState)
         })
 
-        console.log(parseString("This is a string; XD"))
+        button.addEventListener("click", {
+            continueFlow(canvasState)
+        })
+
     }
 }

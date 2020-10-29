@@ -2,23 +2,62 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Kotlin JS Demo</title>
+    <title>Kotlin Graph Parser</title>
 </head>
 <body>
 
-<script src="./KotlinJS/lib/kotlin.js"></script>
-<script src="./KotlinJS/KotlinJS.js"></script>
+<script src="out/production/KotlinJS/lib/kotlin.js"></script>
+<script src="out/production/KotlinJS/KotlinJS.js"></script>
 <fieldset>
-    <legend>Parse</legend>
-    <div style="width: 100%">
-        <div id="parseTree" style="width: 49%; float: left; text-align: center; border-right: 1px solid black;">
-            <p id="left">Testing</p>
-        </div>
-        <div id="derivation" style="width: 49%; float: left; text-align: left">
-            <p id="right">Testing</p>
-        </div>
-    </div>
+    <legend>Kotlin Graph Parser</legend>
+    <div> <fieldset>
+<pre>
+&lt;graph&gt;→ start &lt;plot_data&gt; stop
+&lt;plot_data&gt;→ &lt;plot&gt;
+    | &lt;plot&gt; ; &lt;plot_data &gt;
+&lt;plot&gt;→ bar &lt;x&gt;&lt;y&gt;,&lt;y&gt;
+    | edge &lt;x&gt;&lt;y&gt;,&lt;x&gt;&lt;y&gt;
+    | axis &lt;x&gt;&lt;y&gt;
+    | fill &lt;x&gt;&lt;y&gt;
+&lt;x&gt;→ a | b | c | d | e | f | g | h | i | j
+&lt;y&gt;→ 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+
+    STOP to stop
+</pre>
+    </fieldset> </div><br>
+    <span id="InputGoesHere"></span>
+    <span id="ButtonGoesHere"></span>
+    <div id="modalDiv" class="modal"></div>
+<!--    <div style="width: 100%">-->
+<!--        <div id="parseTree" style="width: 49%; float: left; text-align: center; border-right: 1px solid black;">-->
+<!--            <p id="left">Testing</p>-->
+<!--        </div>-->
+<!--        <div id="derivation" style="width: 49%; float: left; text-align: left">-->
+<!--            <p id="right">Testing</p>-->
+<!--        </div>-->
+<!--    </div>-->
 </fieldset>
 
+<style>
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto; /* 15% from the top and centered */
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%; /* Could be more or less, depending on screen size */
+    }
+</style>
 </body>
 </html>
